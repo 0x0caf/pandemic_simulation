@@ -4,93 +4,110 @@ use rgx::math::*;
 use rand::prelude::*;
 use crate::window_box::WindowBox;
 use std::f32::consts::PI;
+use crate::organism::{OrganismState, InfectionRadius};
 
 
 pub struct WindowAttributes {
-    pub width: f32,
-    pub height: f32,
+    pub width: i32,
+    pub height: i32,
 }
 
 struct CircleState {
     position: Vector2<f32>,
     velocity: f32,
     direction: Vector2<f32>,
+    grid_id: i32,
+    infected: bool,
 }
+// Contagious, Symptomatic, Recovered, Dead
 
 pub struct SimulationApp {
     window: WindowAttributes,
     window_box: WindowBox,
-    circle_state: CircleState,
-    circles: Vec<CircleState>,
+    organisms: Vec<OrganismState>,
+    infection_group: Vec<InfectionRadius>,
+    radius: f32,
+    collision_radius: f32,
+    frame: u32,
 }
 
 impl SimulationApp {
     pub fn new(window: WindowAttributes) -> SimulationApp {
-        let position = Vector2::new( window.width * 0.5, window.height * 0.5);
+        let num_organisms = 5000;
+        let mut num_infected = 0;
+        let max_infected = 1;
+        let percent_in_place = 70.;
+        let grid_pixel_size = 10;
+        let circle_radius = 3.0;
+        let circle_collision_radius = circle_radius * 2.0;
 
-        let num_circles = 500;
-        let mut circles = Vec::new();
-        for i in 1..num_circles {
-            circles.push(
-                Self::new_circle(window.width, window.height)
-            )
+        let window_box = WindowBox::new(window.width, window.height, grid_pixel_size);
+        let mut infection_group = Vec::new();
+        let mut organisms = Vec::new();
+
+        for i in 1..num_organisms {
+            let mut organism = OrganismState::random(window.width as f32, window.height as f32, percent_in_place, &window_box);
+            organism.infected = num_infected < max_infected;
+
+            if organism.infected {
+                infection_group.push(
+                    InfectionRadius {
+                        position: organism.position.clone(),
+                        grid_id: organism.grid_id
+                    }
+                )
+            }
+            organisms.push(
+                organism
+            );
+            num_infected = num_infected + 1;
         }
 
         SimulationApp {
-            window_box: WindowBox::new(window.width, window.height),
+            window_box,
             window,
-            circles,
-            circle_state: CircleState {
-                position,
-                velocity: 1000.0,
-                direction: Vector2::new(0.3, 1.0).normalize()
-            },
+            organisms,
+            radius: circle_radius,
+            collision_radius: circle_collision_radius,
+            infection_group,
+            frame: 0,
         }
     }
 
     pub fn update(&mut self, delta_time: i64) {
-        let shift = self.circle_state.velocity * (delta_time as f32)/1000.0;
-        let result = self.window_box.collided_velocity(&self.circle_state.position, shift, &self.circle_state.direction);
-        self.circle_state.position = result.position.clone();
-        self.circle_state.direction = result.direction.clone();
 
-        for circle in self.circles.iter_mut() {
-            let shift = circle.velocity * (delta_time as f32)/1000.0;
-            let result = self.window_box.collided_velocity(&circle.position, shift, &circle.direction);
-            circle.position = result.position;
-            circle.direction = result.direction;
+        // update all positions
+        for organism in self.organisms.iter_mut() {
+            organism.update(delta_time, &self.window_box);
         }
+
+        // all infected?
+        if self.organisms.len() != self.infection_group.len() {
+            // iterate through the circle group and check for newly infected
+            let mut infection_group = Vec::new();
+            for organism in self.organisms.iter_mut() {
+                organism.check_infected(self.collision_radius, &self.infection_group, &mut infection_group);
+            }
+            self.infection_group = infection_group;
+        }
+
+        self.frame = self.frame + 1;
     }
 
     pub fn render(&self) -> Batch {
         let mut batch = Batch::new();
+        for organism in self.organisms.iter() {
+            let mut circle_color = Rgba::new(0.0, 1.0, 0.0, 1.0);
 
-        let circle_size = 3.0;
-        let circle_color = Rgba::new(1.0, 0.0, 0.0, 1.0);
-
-        for circle in self.circles.iter() {
+            if organism.infected {
+                circle_color = Rgba::new(1.0, 0.0, 0.0, 1.0);
+            }
             batch.add(
-                Shape::circle(Point2::new(circle.position.x, circle.position.y), circle_size, 8)
+                Shape::circle(Point2::new(organism.position.x, organism.position.y), self.radius, 4)
                     .fill(Fill::Solid(circle_color.clone()))
                     .stroke(1.0, circle_color.clone()),
-            )
+            );
         }
         batch
-    }
-
-    fn new_circle(width: f32, height: f32) -> CircleState {
-        let mut rng = rand::thread_rng();
-        let x = width * rng.gen::<f32>();
-        let y = height * rng.gen::<f32>();
-        let velocity = 100. * rng.gen::<f32>();
-        let angle = 2. * PI * rng.gen::<f32>();
-        let ang_x = angle.cos();
-        let ang_y = angle.sin();
-
-        CircleState {
-            position: Vector2::new(x, y),
-            velocity,
-            direction: Vector2::new(ang_x, ang_y)
-        }
     }
 }

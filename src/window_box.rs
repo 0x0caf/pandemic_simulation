@@ -7,6 +7,8 @@ pub struct WindowBox {
     top_right: Vector2<f32>,
     bottom_left: Vector2<f32>,
     bottom_right: Vector2<f32>,
+    grid_columns: i32,
+    grid_pixel_size: i32,
 }
 
 pub struct CollisionResult {
@@ -15,13 +17,24 @@ pub struct CollisionResult {
 }
 
 impl WindowBox {
-    pub fn new(width: f32, height: f32) -> WindowBox {
+    pub fn new(width: i32, height: i32, grid_pixel_size: i32) -> WindowBox {
+        let grid_columns = width / grid_pixel_size;
+        let f_width = width as f32;
+        let f_height = height as f32;
         WindowBox {
-            top_left: Vector2::new(0.0, height),
-            top_right: Vector2::new(width, height),
+            top_left: Vector2::new(0.0, f_height),
+            top_right: Vector2::new(f_width, f_height),
             bottom_left: Vector2::new(0.0, 0.0),
-            bottom_right: Vector2::new(width, 0.0),
+            bottom_right: Vector2::new(f_width, 0.0),
+            grid_columns,
+            grid_pixel_size,
         }
+    }
+
+    pub fn grid_id(&self, position: &Vector2<f32>) -> i32 {
+        let x_grid = position.x as i32 / self.grid_pixel_size;
+        let y_grid = position.y as i32 / self.grid_pixel_size;
+        x_grid + (y_grid * self.grid_columns)
     }
 
     pub fn collided_velocity(&self, position: &Vector2<f32>, distance: f32, direction: &Vector2<f32>) -> CollisionResult {

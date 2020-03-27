@@ -13,6 +13,7 @@ use winit::{
 
 mod simulation_app;
 mod window_box;
+mod organism;
 use simulation_app::{SimulationApp, WindowAttributes};
 
 fn main() -> Result<(), std::io::Error> {
@@ -25,7 +26,7 @@ fn main() -> Result<(), std::io::Error> {
     let mut chain = r.swap_chain(win.width as u32, win.height as u32, PresentMode::default());
 
     let rad = 64;
-    let mut simulation = SimulationApp::new(WindowAttributes{ width: win.width as f32, height: win.height as f32});
+    let mut simulation = SimulationApp::new(WindowAttributes{ width: win.width as i32, height: win.height as i32});
 
     let mut last_time = Local::now().timestamp_millis();
 
