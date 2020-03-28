@@ -1,9 +1,9 @@
+use chrono::Local;
+use rgx::color::Rgba;
 use rgx::core::*;
 use rgx::kit;
-use rgx::kit::shape2d::{Batch, Shape, Fill};
-use rgx::color::Rgba;
+use rgx::kit::shape2d::{Batch, Fill, Shape};
 use rgx::math::*;
-use chrono::{Local};
 
 use winit::{
     event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent},
@@ -11,9 +11,9 @@ use winit::{
     window::Window,
 };
 
+mod organism;
 mod simulation_app;
 mod window_box;
-mod organism;
 use simulation_app::{SimulationApp, WindowAttributes};
 
 fn main() -> Result<(), std::io::Error> {
@@ -26,11 +26,14 @@ fn main() -> Result<(), std::io::Error> {
     let mut chain = r.swap_chain(win.width as u32, win.height as u32, PresentMode::default());
 
     let rad = 64;
-    let mut simulation = SimulationApp::new(WindowAttributes{ width: win.width as i32, height: win.height as i32});
+    let mut simulation = SimulationApp::new(WindowAttributes {
+        width: win.width as i32,
+        height: win.height as i32,
+    });
 
     let mut last_time = Local::now().timestamp_millis();
 
-    event_loop.run(move | event, _, control_flow | match event {
+    event_loop.run(move |event, _, control_flow| match event {
         Event::WindowEvent { event, .. } => match event {
             _ => *control_flow = ControlFlow::Poll,
         },

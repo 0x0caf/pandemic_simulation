@@ -1,10 +1,9 @@
-
-use rgx::math::*;
+use crate::window_box::WindowBox;
 use rand::prelude::*;
 use rgx::core::*;
-use rgx::kit::shape2d::{Batch, Shape, Fill};
+use rgx::kit::shape2d::{Batch, Fill, Shape};
+use rgx::math::*;
 use std::f32::consts::PI;
-use crate::window_box::WindowBox;
 
 #[derive(PartialEq)]
 enum InfectionState {
@@ -29,7 +28,12 @@ pub struct InfectionRadius {
 }
 
 impl OrganismState {
-    pub fn random(width: f32, height: f32, percentage_in_place: f32, window_box: &WindowBox) -> Self {
+    pub fn random(
+        width: f32,
+        height: f32,
+        percentage_in_place: f32,
+        window_box: &WindowBox,
+    ) -> Self {
         let mut rng = rand::thread_rng();
         let x = width * rng.gen::<f32>();
         let y = height * rng.gen::<f32>();
@@ -82,11 +86,19 @@ impl OrganismState {
         }
     }
 
-    pub fn check_infected(&mut self, collision_radius: f32, previous_infected_group: &Vec<InfectionRadius>, infected_group: &mut Vec<InfectionRadius>) {
+    pub fn check_infected(
+        &mut self,
+        collision_radius: f32,
+        previous_infected_group: &Vec<InfectionRadius>,
+        infected_group: &mut Vec<InfectionRadius>,
+    ) {
         if self.infection_state == InfectionState::Uninfected {
             'inner: for radius in previous_infected_group.iter() {
                 if self.grid_id == radius.grid_id {
-                    if self.position.distance(radius.position) <= collision_radius {
+                    let x_diff = self.position.x - radius.position.x;
+                    let y_diff = self.position.y - radius.position.y;
+                    let dot = x_diff * x_diff + y_diff * y_diff;
+                    if dot <= collision_radius * collision_radius {
                         self.infection_state = InfectionState::Infected;
                         break 'inner;
                     }
@@ -103,17 +115,25 @@ impl OrganismState {
     }
 
     pub fn render(&self, radius: f32, batch: &mut Batch) {
-
         let color = match self.infection_state {
-            InfectionState::Uninfected => Rgba::new(1.0, 1.0, 1.0, 1.0),
+            InfectionState::Uninfected => Rgba::new(0.0, 1.0, 0.0, 1.0),
             InfectionState::Infected => Rgba::new(1.0, 0.0, 0.0, 1.0),
-            InfectionState::Recovered => Rgba::new(0.0, 1.0, 0.0, 1.0),
-            InfectionState::Dead => Rgba::new(0.75, 0.75, 0.75, 1.0),
+            InfectionState::Recovered => Rgba::new(1.0, 1.0, 1.0, 1.0),
+            InfectionState::Dead => Rgba::new(1.0, 0., 1.0, 1.0),
         };
         batch.add(
-            Shape::circle(Point2::new(self.position.x, self.position.y), radius, 4)
-                .fill(Fill::Solid(color.clone()))
-                .stroke(1.0, color.clone()),
+            Shape::rect(
+                Point2::new(
+                    self.position.x + radius * 0.5,
+                    self.position.y + radius * 0.5,
+                ),
+                Point2::new(
+                    self.position.x - radius * 0.5,
+                    self.position.y - radius * 0.5,
+                ),
+            )
+            .fill(Fill::Solid(color.clone()))
+            .stroke(1.0, color.clone()),
         );
     }
 }

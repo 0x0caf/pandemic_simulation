@@ -37,7 +37,12 @@ impl WindowBox {
         x_grid + (y_grid * self.grid_columns)
     }
 
-    pub fn collided_velocity(&self, position: &Vector2<f32>, distance: f32, direction: &Vector2<f32>) -> CollisionResult {
+    pub fn collided_velocity(
+        &self,
+        position: &Vector2<f32>,
+        distance: f32,
+        direction: &Vector2<f32>,
+    ) -> CollisionResult {
         let new_position = Vector2::new(
             position.x + (distance * direction.x),
             position.y + (distance * direction.y),
@@ -57,60 +62,109 @@ impl WindowBox {
         } else {
             CollisionResult {
                 position: new_position,
-                direction: direction.clone()
+                direction: direction.clone(),
             }
         }
     }
 
-    fn top_collided(&self, current: &Vector2<f32>, projected: &Vector2<f32>, direction: &Vector2<f32>) -> Option<CollisionResult>  {
-        Self::line_collision(&self.top_left, &self.top_right, &current, &projected).map_or(None, |collide_point| {
-            let new_direction = Vector2::new(direction.x, -direction.y);
-            let new_distance = collide_point.distance(projected.clone());
-            let new_position = Vector2::new(collide_point.x + (new_direction.x * new_distance), collide_point.y + (new_direction.y * new_distance));
-            Some(CollisionResult {
-                position: current.clone(), //collide_point.clone(),
-                direction: new_direction
-            })
-        })
+    fn top_collided(
+        &self,
+        current: &Vector2<f32>,
+        projected: &Vector2<f32>,
+        direction: &Vector2<f32>,
+    ) -> Option<CollisionResult> {
+        Self::line_collision(&self.top_left, &self.top_right, &current, &projected).map_or(
+            None,
+            |collide_point| {
+                let new_direction = Vector2::new(direction.x, -direction.y);
+                let new_distance = collide_point.distance(projected.clone());
+                let new_position = Vector2::new(
+                    collide_point.x + (new_direction.x * new_distance),
+                    collide_point.y + (new_direction.y * new_distance),
+                );
+                Some(CollisionResult {
+                    position: current.clone(), //collide_point.clone(),
+                    direction: new_direction,
+                })
+            },
+        )
     }
 
-    fn bottom_collided(&self, current: &Vector2<f32>, projected: &Vector2<f32>, direction: &Vector2<f32>) -> Option<CollisionResult>  {
-        Self::line_collision(&self.bottom_left, &self.bottom_right, &current, &projected).map_or(None, |collide_point| {
-            let new_direction = Vector2::new(direction.x, -direction.y);
-            let new_distance = collide_point.distance(projected.clone());
-            let new_position = Vector2::new(collide_point.x + (new_direction.x * new_distance), collide_point.y + (new_direction.y * new_distance));
-            Some(CollisionResult {
-                position: current.clone(), //new_position,
-                direction: new_direction
-            })
-        })
+    fn bottom_collided(
+        &self,
+        current: &Vector2<f32>,
+        projected: &Vector2<f32>,
+        direction: &Vector2<f32>,
+    ) -> Option<CollisionResult> {
+        Self::line_collision(&self.bottom_left, &self.bottom_right, &current, &projected).map_or(
+            None,
+            |collide_point| {
+                let new_direction = Vector2::new(direction.x, -direction.y);
+                let new_distance = collide_point.distance(projected.clone());
+                let new_position = Vector2::new(
+                    collide_point.x + (new_direction.x * new_distance),
+                    collide_point.y + (new_direction.y * new_distance),
+                );
+                Some(CollisionResult {
+                    position: current.clone(), //new_position,
+                    direction: new_direction,
+                })
+            },
+        )
     }
 
-    fn left_collided(&self, current: &Vector2<f32>, projected: &Vector2<f32>, direction: &Vector2<f32>) -> Option<CollisionResult> {
-        Self::line_collision(&self.top_left, &self.bottom_left, &current, &projected).map_or(None, |collide_point| {
-            let new_direction = Vector2::new(-direction.x, direction.y);
-            let new_distance = collide_point.distance(projected.clone());
-            let new_position = Vector2::new(collide_point.x + (new_direction.x * new_distance), collide_point.y + (new_direction.y * new_distance));
-            Some(CollisionResult {
-                position: current.clone(), //new_position,
-                direction: new_direction
-            })
-        })
+    fn left_collided(
+        &self,
+        current: &Vector2<f32>,
+        projected: &Vector2<f32>,
+        direction: &Vector2<f32>,
+    ) -> Option<CollisionResult> {
+        Self::line_collision(&self.top_left, &self.bottom_left, &current, &projected).map_or(
+            None,
+            |collide_point| {
+                let new_direction = Vector2::new(-direction.x, direction.y);
+                let new_distance = collide_point.distance(projected.clone());
+                let new_position = Vector2::new(
+                    collide_point.x + (new_direction.x * new_distance),
+                    collide_point.y + (new_direction.y * new_distance),
+                );
+                Some(CollisionResult {
+                    position: current.clone(), //new_position,
+                    direction: new_direction,
+                })
+            },
+        )
     }
 
-    fn right_collided(&self, current: &Vector2<f32>, projected: &Vector2<f32>, direction: &Vector2<f32>) -> Option<CollisionResult>  {
-        Self::line_collision(&self.top_right, &self.bottom_right, &current, &projected).map_or(None, |collide_point| {
-            let new_direction = Vector2::new(-direction.x, direction.y);
-            let new_distance = collide_point.distance(projected.clone());
-            let new_position = Vector2::new(collide_point.x + (new_direction.x * new_distance), collide_point.y + (new_direction.y * new_distance));
-            Some(CollisionResult {
-                position: current.clone(),
-                direction: new_direction
-            })
-        })
+    fn right_collided(
+        &self,
+        current: &Vector2<f32>,
+        projected: &Vector2<f32>,
+        direction: &Vector2<f32>,
+    ) -> Option<CollisionResult> {
+        Self::line_collision(&self.top_right, &self.bottom_right, &current, &projected).map_or(
+            None,
+            |collide_point| {
+                let new_direction = Vector2::new(-direction.x, direction.y);
+                let new_distance = collide_point.distance(projected.clone());
+                let new_position = Vector2::new(
+                    collide_point.x + (new_direction.x * new_distance),
+                    collide_point.y + (new_direction.y * new_distance),
+                );
+                Some(CollisionResult {
+                    position: current.clone(),
+                    direction: new_direction,
+                })
+            },
+        )
     }
 
-    fn line_collision(p1_1: &Vector2<f32>, p1_2: &Vector2<f32>, p2_3: &Vector2<f32>, p2_4: &Vector2<f32>) -> Option<Vector2<f32>> {
+    fn line_collision(
+        p1_1: &Vector2<f32>,
+        p1_2: &Vector2<f32>,
+        p2_3: &Vector2<f32>,
+        p2_4: &Vector2<f32>,
+    ) -> Option<Vector2<f32>> {
         let div0 = (p2_4.y - p2_3.y) * (p1_2.x - p1_1.x) - (p2_4.x - p2_3.x) * (p1_2.y - p1_1.y);
         let num1 = (p2_4.x - p2_3.x) * (p1_1.y - p2_3.y) - (p2_4.y - p2_3.y) * (p1_1.x - p2_3.x);
         let num2 = (p1_2.x - p1_1.x) * (p1_1.y - p2_3.y) - (p1_2.y - p1_1.y) * (p1_1.x - p2_3.x);
@@ -129,7 +183,8 @@ impl WindowBox {
             if (r >= 0.0 && r <= 1.0) && (s >= 0.0 && s <= 1.0) {
                 Some(Vector2::new(
                     p1_1.x + (num1 * (p1_2.x - p1_1.x)),
-                    p1_1.y + (num1 * (p1_2.y - p1_1.y))))
+                    p1_1.y + (num1 * (p1_2.y - p1_1.y)),
+                ))
             } else {
                 None
             }
