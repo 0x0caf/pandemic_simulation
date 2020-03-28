@@ -36,7 +36,7 @@ impl SimulationApp {
         let num_organisms = 5000;
         let mut num_infected = 0;
         let max_infected = 1;
-        let percent_in_place = 70.;
+        let percent_in_place = 99.;
         let grid_pixel_size = 10;
         let circle_radius = 3.0;
         let circle_collision_radius = circle_radius * 2.0;
@@ -47,9 +47,11 @@ impl SimulationApp {
 
         for i in 1..num_organisms {
             let mut organism = OrganismState::random(window.width as f32, window.height as f32, percent_in_place, &window_box);
-            organism.infected = num_infected < max_infected;
+            if num_infected < max_infected {
+                organism.set_infected();
+            }
 
-            if organism.infected {
+            if organism.is_infected() {
                 infection_group.push(
                     InfectionRadius {
                         position: organism.position.clone(),
@@ -97,16 +99,7 @@ impl SimulationApp {
     pub fn render(&self) -> Batch {
         let mut batch = Batch::new();
         for organism in self.organisms.iter() {
-            let mut circle_color = Rgba::new(0.0, 1.0, 0.0, 1.0);
-
-            if organism.infected {
-                circle_color = Rgba::new(1.0, 0.0, 0.0, 1.0);
-            }
-            batch.add(
-                Shape::circle(Point2::new(organism.position.x, organism.position.y), self.radius, 4)
-                    .fill(Fill::Solid(circle_color.clone()))
-                    .stroke(1.0, circle_color.clone()),
-            );
+            organism.render(self.radius, &mut batch);
         }
         batch
     }
