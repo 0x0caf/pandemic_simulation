@@ -18,6 +18,8 @@ pub struct OrganismState {
     velocity: f32,
     direction: Vector2<f32>,
     infection_time: i64,
+    infection_lifetime_ms: i64,
+    fatality_rate: f32,
     pub grid_id: i32,
     infection_state: InfectionState,
 }
@@ -31,7 +33,10 @@ impl OrganismState {
     pub fn random(
         width: f32,
         height: f32,
+        max_velocity: f32,
         percentage_in_place: f32,
+        infection_lifetime_ms: i64,
+        fatality_rate: f32,
         window_box: &WindowBox,
     ) -> Self {
         let mut rng = rand::thread_rng();
@@ -40,7 +45,7 @@ impl OrganismState {
         let velocity = if rng.gen::<f32>() * 100. < percentage_in_place {
             0.
         } else {
-            (width / 5.) * rng.gen::<f32>()
+            max_velocity * rng.gen::<f32>()
         };
         let angle = 2. * PI * rng.gen::<f32>();
         let ang_x = angle.cos();
@@ -51,6 +56,8 @@ impl OrganismState {
             position,
             velocity,
             infection_time: 0,
+            infection_lifetime_ms,
+            fatality_rate,
             direction: Vector2::new(ang_x, ang_y),
             grid_id: window_box.grid_id(&position),
             infection_state: InfectionState::Uninfected,
@@ -73,9 +80,9 @@ impl OrganismState {
         self.grid_id = window_box.grid_id(&result.position);
         if self.infection_state == InfectionState::Infected {
             self.infection_time += delta_ms;
-            if self.infection_time >= 5000 {
+            if self.infection_time >= self.infection_lifetime_ms {
                 let mut rng = rand::thread_rng();
-                if rng.gen::<f32>() * 100. < 3.0 {
+                if rng.gen::<f32>() * 100. < self.fatality_rate {
                     self.infection_state = InfectionState::Dead;
                     self.velocity = 0.0;
                 } else {
@@ -114,12 +121,18 @@ impl OrganismState {
         }
     }
 
-    pub fn render(&self, radius: f32, batch: &mut Batch) {
+    pub fn render(&self, radius: f32, batch: &mut Batch, frame: u32) {
         let color = match self.infection_state {
             InfectionState::Uninfected => Rgba::new(0.0, 0.5, 0.0, 1.0),
             InfectionState::Infected => Rgba::new(1.0, 0.0, 0.0, 1.0),
             InfectionState::Recovered => Rgba::new(0.5, 0.5, 0.5, 1.0),
-            InfectionState::Dead => Rgba::new(1.0, 0., 1.0, 1.0),
+            InfectionState::Dead => {
+                if frame >> 3 & 0x1 == 1 {
+                    Rgba::new(1.0, 0., 1.0, 1.0)
+                } else {
+                    Rgba::new(0.0, 0., 0., 1.0)
+                }
+            }
         };
         batch.add(
             Shape::rect(

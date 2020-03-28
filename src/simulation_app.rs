@@ -34,11 +34,14 @@ impl SimulationApp {
     pub fn new(window: WindowAttributes) -> SimulationApp {
         let num_organisms = 5000;
         let mut num_infected = 0;
-        let max_infected = 10;
-        let percent_in_place = 99.;
+        let max_infected = 5;
+        let percent_in_place = 50.;
         let grid_pixel_size = 10;
         let circle_radius = 3.0;
+        let infection_lifetime_ms = 5000;
         let circle_collision_radius = circle_radius * 2.0;
+        let fatality_rate = 3.0;
+        let max_velocity = (window.width / 5) as f32;
 
         let window_box = WindowBox::new(window.width, window.height, grid_pixel_size);
         let mut infection_group = Vec::new();
@@ -48,7 +51,10 @@ impl SimulationApp {
             let mut organism = OrganismState::random(
                 window.width as f32,
                 window.height as f32,
+                max_velocity,
                 percent_in_place,
+                infection_lifetime_ms,
+                fatality_rate,
                 &window_box,
             );
             if num_infected < max_infected {
@@ -81,7 +87,6 @@ impl SimulationApp {
         for organism in self.organisms.iter_mut() {
             organism.update(delta_time, &self.window_box);
         }
-
         // all infected?
         if self.organisms.len() != self.infection_group.len() {
             // iterate through the circle group and check for newly infected
@@ -95,14 +100,13 @@ impl SimulationApp {
             }
             self.infection_group = infection_group;
         }
-
         self.frame = self.frame + 1;
     }
 
     pub fn render(&self) -> Batch {
         let mut batch = Batch::new();
         for organism in self.organisms.iter() {
-            organism.render(self.radius, &mut batch);
+            organism.render(self.radius, &mut batch, self.frame);
         }
         batch
     }

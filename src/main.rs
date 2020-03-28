@@ -19,6 +19,8 @@ use simulation_app::{SimulationApp, WindowAttributes};
 fn main() -> Result<(), std::io::Error> {
     let event_loop = EventLoop::new();
     let window = Window::new(&event_loop).unwrap();
+    window.set_resizable(false);
+    window.set_title("Pandemic Simulation");
 
     let mut r = Renderer::new(&window)?;
     let mut win = window.inner_size();
