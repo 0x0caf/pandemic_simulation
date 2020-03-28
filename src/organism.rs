@@ -116,9 +116,9 @@ impl OrganismState {
 
     pub fn render(&self, radius: f32, batch: &mut Batch) {
         let color = match self.infection_state {
-            InfectionState::Uninfected => Rgba::new(0.0, 1.0, 0.0, 1.0),
+            InfectionState::Uninfected => Rgba::new(0.0, 0.5, 0.0, 1.0),
             InfectionState::Infected => Rgba::new(1.0, 0.0, 0.0, 1.0),
-            InfectionState::Recovered => Rgba::new(1.0, 1.0, 1.0, 1.0),
+            InfectionState::Recovered => Rgba::new(0.5, 0.5, 0.5, 1.0),
             InfectionState::Dead => Rgba::new(1.0, 0., 1.0, 1.0),
         };
         batch.add(

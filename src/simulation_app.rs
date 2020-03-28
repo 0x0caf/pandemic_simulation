@@ -35,7 +35,7 @@ impl SimulationApp {
         let num_organisms = 5000;
         let mut num_infected = 0;
         let max_infected = 10;
-        let percent_in_place = 75.;
+        let percent_in_place = 99.;
         let grid_pixel_size = 10;
         let circle_radius = 3.0;
         let circle_collision_radius = circle_radius * 2.0;
