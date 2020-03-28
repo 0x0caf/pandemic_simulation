@@ -32,10 +32,10 @@ pub struct SimulationApp {
 
 impl SimulationApp {
     pub fn new(window: WindowAttributes) -> SimulationApp {
-        let num_organisms = 5000;
+        let num_organisms = 10000;
         let mut num_infected = 0;
-        let max_infected = 5;
-        let percent_in_place = 50.;
+        let max_infected = 10;
+        let percent_in_place = 10.;
         let grid_pixel_size = 10;
         let circle_radius = 3.0;
         let infection_lifetime_ms = 5000;
@@ -51,6 +51,7 @@ impl SimulationApp {
             let mut organism = OrganismState::random(
                 window.width as f32,
                 window.height as f32,
+                circle_radius,
                 max_velocity,
                 percent_in_place,
                 infection_lifetime_ms,
@@ -62,10 +63,7 @@ impl SimulationApp {
             }
 
             if organism.is_infected() {
-                infection_group.push(InfectionRadius {
-                    position: organism.position.clone(),
-                    grid_id: organism.grid_id,
-                })
+                infection_group.push(organism.get_infection_radius())
             }
             organisms.push(organism);
             num_infected = num_infected + 1;
