@@ -74,13 +74,8 @@ impl WindowBox {
     ) -> Option<CollisionResult> {
         Self::line_collision(&self.top_left, &self.top_right, &current, &projected).map_or(
             None,
-            |collide_point| {
+            |_collide_point| {
                 let new_direction = Vector2::new(direction.x, -direction.y);
-                let new_distance = collide_point.distance(projected.clone());
-                let new_position = Vector2::new(
-                    collide_point.x + (new_direction.x * new_distance),
-                    collide_point.y + (new_direction.y * new_distance),
-                );
                 Some(CollisionResult {
                     position: current.clone(), //collide_point.clone(),
                     direction: new_direction,
@@ -97,13 +92,8 @@ impl WindowBox {
     ) -> Option<CollisionResult> {
         Self::line_collision(&self.bottom_left, &self.bottom_right, &current, &projected).map_or(
             None,
-            |collide_point| {
+            |_collide_point| {
                 let new_direction = Vector2::new(direction.x, -direction.y);
-                let new_distance = collide_point.distance(projected.clone());
-                let new_position = Vector2::new(
-                    collide_point.x + (new_direction.x * new_distance),
-                    collide_point.y + (new_direction.y * new_distance),
-                );
                 Some(CollisionResult {
                     position: current.clone(), //new_position,
                     direction: new_direction,
@@ -120,13 +110,8 @@ impl WindowBox {
     ) -> Option<CollisionResult> {
         Self::line_collision(&self.top_left, &self.bottom_left, &current, &projected).map_or(
             None,
-            |collide_point| {
+            |_collide_point| {
                 let new_direction = Vector2::new(-direction.x, direction.y);
-                let new_distance = collide_point.distance(projected.clone());
-                let new_position = Vector2::new(
-                    collide_point.x + (new_direction.x * new_distance),
-                    collide_point.y + (new_direction.y * new_distance),
-                );
                 Some(CollisionResult {
                     position: current.clone(), //new_position,
                     direction: new_direction,
@@ -143,13 +128,8 @@ impl WindowBox {
     ) -> Option<CollisionResult> {
         Self::line_collision(&self.top_right, &self.bottom_right, &current, &projected).map_or(
             None,
-            |collide_point| {
+            |_collide_point| {
                 let new_direction = Vector2::new(-direction.x, direction.y);
-                let new_distance = collide_point.distance(projected.clone());
-                let new_position = Vector2::new(
-                    collide_point.x + (new_direction.x * new_distance),
-                    collide_point.y + (new_direction.y * new_distance),
-                );
                 Some(CollisionResult {
                     position: current.clone(),
                     direction: new_direction,

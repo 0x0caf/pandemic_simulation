@@ -24,11 +24,10 @@ fn main() -> Result<(), std::io::Error> {
     window.set_title("Pandemic Simulation");
 
     let mut r = Renderer::new(&window)?;
-    let mut win = window.inner_size();
+    let win = window.inner_size();
     let pip: kit::shape2d::Pipeline = r.pipeline(Blending::default());
     let mut chain = r.swap_chain(win.width as u32, win.height as u32, PresentMode::default());
 
-    let rad = 64;
     let mut simulation = SimulationApp::new(WindowAttributes {
         width: win.width as i32,
         height: win.height as i32,

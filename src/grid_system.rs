@@ -1,9 +1,9 @@
-use crate::area::{Area, AreaPtr, GridId, AreaId};
+use crate::area::{AreaPtr, GridId, AreaId};
 use crate::square::Square;
 use rgx::math::*;
-use std::cell::RefCell;
 use std::rc::Rc;
 
+#[allow(dead_code)]
 struct Grid {
     radii: Vec<AreaPtr>,
     square: Square,
@@ -11,10 +11,8 @@ struct Grid {
 
 pub struct GridSystem {
     grids: Vec<Grid>,
-    total_num_grids: i32,
     grid_size: f32,
     num_columns: i32,
-    num_areas: i64,
 }
 
 impl GridSystem {
@@ -22,7 +20,6 @@ impl GridSystem {
         // adding one to cover 0 to n, rather than 0 to n - 1
         let adjusted_width = ((width / grid_size) + 1) as i32;
         let adjusted_height = ((height / grid_size) + 1) as i32;
-        let total_num_grids = (adjusted_width * adjusted_height) as i32;
         let mut grids = vec![];
         let half_grid_size = grid_size >> 1;
 
@@ -43,26 +40,11 @@ impl GridSystem {
 
         GridSystem {
             grids,
-            total_num_grids,
             num_columns: adjusted_width,
             grid_size: grid_size as f32,
-            num_areas: 0,
         }
     }
 
-    pub fn create_area(&mut self) -> AreaPtr {
-        self.num_areas = self.num_areas + 1;
-        let area = Area {
-            area_id: self.num_areas,
-            square: Square::new(
-                // TODO: Pass in appropriate values, not zeros
-                Vector2::new(0., 0.),
-                0.,
-            ),
-            grid_id: 0,
-        };
-        Rc::new(RefCell::new(area))
-    }
 
     pub fn get_grid_index(&self, position: &Vector2<f32>) -> usize {
         let x = (position.x as i32) / (self.grid_size as i32);

@@ -26,10 +26,6 @@ impl Area {
         Rc::new(RefCell::new(area))
     }
 
-    fn update(&mut self, center: &Vector2<f32>, grid_id: GridId) {
-        self.square.update(center);
-        self.grid_id = grid_id;
-    }
 }
 
 impl Ord for Area {

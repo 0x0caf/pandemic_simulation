@@ -1,30 +1,18 @@
-use crate::organism::{InfectionRadius, OrganismState};
+use crate::organism::OrganismState;
 use crate::window_box::WindowBox;
 use rgx::kit::shape2d::Batch;
-use rgx::math::*;
 use crate::grid_system::GridSystem;
 
 pub struct WindowAttributes {
     pub width: i32,
     pub height: i32,
 }
-
-struct CircleState {
-    position: Vector2<f32>,
-    velocity: f32,
-    direction: Vector2<f32>,
-    grid_id: i32,
-    infected: bool,
-}
 // Contagious, Symptomatic, Recovered, Dead
 
 pub struct SimulationApp {
-    window: WindowAttributes,
     window_box: WindowBox,
     organisms: Vec<OrganismState>,
-    infection_group: Vec<InfectionRadius>,
     grid_system: GridSystem,
-    radius: f32,
     frame: u32,
 }
 
@@ -42,12 +30,10 @@ impl SimulationApp {
         let max_velocity = 100.;
 
         let window_box = WindowBox::new(window.width, window.height, grid_pixel_size);
-        let mut infection_group = Vec::new();
         let mut organisms = Vec::new();
-
         let grid_system = GridSystem::new(window.width, window.height, grid_pixel_size);
 
-        for i in 1..num_organisms {
+        for _i in 1..num_organisms {
             let mut organism = OrganismState::random(
                 window.width as f32,
                 window.height as f32,
@@ -61,7 +47,7 @@ impl SimulationApp {
             );
             if num_infected < max_infected {
                 organism.set_infected();
-                infection_group.push(organism.get_infection_radius());
+                // TODO: Add to grid system
             }
 
             organisms.push(organism);
@@ -70,11 +56,8 @@ impl SimulationApp {
 
         SimulationApp {
             window_box,
-            window,
             organisms,
             grid_system,
-            radius: circle_radius,
-            infection_group,
             frame: 0,
         }
     }
@@ -84,14 +67,9 @@ impl SimulationApp {
         for organism in self.organisms.iter_mut() {
             organism.update(delta_time, &self.window_box);
         }
-        // all infected?
-        if self.organisms.len() != self.infection_group.len() {
-            // iterate through the circle group and check for newly infected
-            let mut infection_group = Vec::new();
-            for organism in self.organisms.iter_mut() {
-                organism.check_infected(&self.infection_group, &mut infection_group, &mut self.grid_system);
-            }
-            self.infection_group = infection_group;
+        // positions updated, now check for intersections
+        for organism in self.organisms.iter_mut() {
+            organism.check_infected(&mut self.grid_system);
         }
         self.frame = self.frame + 1;
     }
@@ -99,7 +77,7 @@ impl SimulationApp {
     pub fn render(&self) -> Batch {
         let mut batch = Batch::new();
         for organism in self.organisms.iter() {
-            organism.render(self.radius, &mut batch, self.frame);
+            organism.render(&mut batch, self.frame);
         }
         batch
     }

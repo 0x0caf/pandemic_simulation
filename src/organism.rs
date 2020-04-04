@@ -15,43 +15,9 @@ enum InfectionState {
     Dead,
 }
 
-#[derive(Clone)]
-pub struct Square {
-    bottom_left: Vector2<f32>,
-    top_right: Vector2<f32>,
-}
-
-impl Square {
-    fn from_center(position: &Vector2<f32>, size: f32) -> Square {
-        let half_size = size * 0.5;
-        let left = position.x - half_size;
-        let right = position.x + half_size;
-        let bottom = position.y - half_size;
-        let top = position.y + half_size;
-        Square {
-            bottom_left: Vector2::new(left, bottom),
-            top_right: Vector2::new(right, top),
-        }
-    }
-
-    fn intersects(&self, test: &Square) -> bool {
-        let y_intersect = (test.bottom_left.y >= self.bottom_left.y
-            && test.bottom_left.y <= self.top_right.y)
-            || (test.top_right.y >= self.bottom_left.y && test.top_right.y <= self.top_right.y);
-
-        let x_intersect = (test.bottom_left.x >= self.bottom_left.x
-            && test.bottom_left.x <= self.top_right.x)
-            || (test.top_right.x >= self.bottom_left.x && test.top_right.x <= self.top_right.x);
-
-        y_intersect && x_intersect
-    }
-}
-
 pub struct OrganismState {
     pub position: Vector2<f32>,
     area: AreaPtr,
-    square: Square,
-    size: f32,
     velocity: f32,
     direction: Vector2<f32>,
     infection_time: i64,
@@ -59,12 +25,6 @@ pub struct OrganismState {
     fatality_rate: f32,
     pub grid_id: i32,
     infection_state: InfectionState,
-}
-
-pub struct InfectionRadius {
-    pub position: Vector2<f32>,
-    pub square: Square,
-    pub grid_id: i32,
 }
 
 impl OrganismState {
@@ -95,8 +55,6 @@ impl OrganismState {
         Self {
             position,
             area: Area::new(&position, grid_id, size),
-            square: Square::from_center(&position, size),
-            size,
             velocity,
             infection_time: 0,
             infection_lifetime_ms,
@@ -111,24 +69,11 @@ impl OrganismState {
         self.infection_state = InfectionState::Infected;
     }
 
-    pub fn is_infected(&self) -> bool {
-        self.infection_state == InfectionState::Infected
-    }
-
-    pub fn get_infection_radius(&self) -> InfectionRadius {
-        InfectionRadius {
-            position: self.position.clone(),
-            square: self.square.clone(),
-            grid_id: self.grid_id,
-        }
-    }
-
     pub fn update(&mut self, delta_ms: i64, window_box: &WindowBox) {
         let shift = self.velocity * (delta_ms as f32) / 1000.0;
         let result = window_box.collided_velocity(&self.position, shift, &self.direction);
         self.position = result.position;
         (&*self.area).borrow_mut().square.update(&self.position);
-        self.square = Square::from_center(&self.position, self.size);
         self.direction = result.direction;
         self.grid_id = window_box.grid_id(&result.position);
         if self.infection_state == InfectionState::Infected {
@@ -148,8 +93,6 @@ impl OrganismState {
 
     pub fn check_infected(
         &mut self,
-        previous_infected_group: &Vec<InfectionRadius>,
-        infected_group: &mut Vec<InfectionRadius>,
         grid_system: &mut GridSystem,
     ) {
 
@@ -168,7 +111,6 @@ impl OrganismState {
         }
 
         if self.infection_state == InfectionState::Infected {
-            infected_group.push(self.get_infection_radius());
             if old_grid_id != new_grid_id {
                 grid_system.remove_area_from_grid((&*self.area).borrow().area_id, old_grid_id);
                 grid_system.add_area(&self.area, new_grid_id);
@@ -178,7 +120,7 @@ impl OrganismState {
         }
     }
 
-    pub fn render(&self, radius: f32, batch: &mut Batch, frame: u32) {
+    pub fn render(&self, batch: &mut Batch, frame: u32) {
         let color = match self.infection_state {
             InfectionState::Uninfected => Rgba::new(0.0, 0.5, 0.0, 1.0),
             InfectionState::Infected => Rgba::new(1.0, 0.0, 0.0, 1.0),
@@ -191,10 +133,11 @@ impl OrganismState {
                 }
             }
         };
+        let square = &(&*self.area).borrow().square;
         batch.add(
             Shape::rect(
-                Point2::new(self.square.bottom_left.x, self.square.bottom_left.y),
-                Point2::new(self.square.top_right.x, self.square.top_right.y),
+                Point2::new(square.bottom_left.x, square.bottom_left.y),
+                Point2::new(square.top_right.x, square.top_right.y),
             )
             .fill(Fill::Solid(color.clone()))
             .stroke(1.0, color.clone()),
