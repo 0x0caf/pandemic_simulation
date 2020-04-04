@@ -1,10 +1,8 @@
 use crate::organism::{InfectionRadius, OrganismState};
 use crate::window_box::WindowBox;
-use rand::prelude::*;
-use rgx::core::*;
-use rgx::kit::shape2d::{Batch, Fill, Shape};
+use rgx::kit::shape2d::Batch;
 use rgx::math::*;
-use std::f32::consts::PI;
+use crate::grid_system::GridSystem;
 
 pub struct WindowAttributes {
     pub width: i32,
@@ -25,27 +23,29 @@ pub struct SimulationApp {
     window_box: WindowBox,
     organisms: Vec<OrganismState>,
     infection_group: Vec<InfectionRadius>,
+    grid_system: GridSystem,
     radius: f32,
-    collision_radius: f32,
     frame: u32,
 }
 
 impl SimulationApp {
     pub fn new(window: WindowAttributes) -> SimulationApp {
-        let num_organisms = 10000;
+        let num_organisms = 20000;
         let mut num_infected = 0;
-        let max_infected = 10;
-        let percent_in_place = 10.;
-        let grid_pixel_size = 10;
-        let circle_radius = 3.0;
-        let infection_lifetime_ms = 5000;
-        let circle_collision_radius = circle_radius * 2.0;
-        let fatality_rate = 3.0;
-        let max_velocity = (window.width / 5) as f32;
+        let max_infected = 50;
+        let percent_in_place = 0.;
+        let circle_radius = 1.0;
+        let infection_lifetime_ms = 1000;
+        let fatality_rate = 10.0;
+        // proportions
+        let grid_pixel_size = 20;
+        let max_velocity = 100.;
 
         let window_box = WindowBox::new(window.width, window.height, grid_pixel_size);
         let mut infection_group = Vec::new();
         let mut organisms = Vec::new();
+
+        let grid_system = GridSystem::new(window.width, window.height, grid_pixel_size);
 
         for i in 1..num_organisms {
             let mut organism = OrganismState::random(
@@ -57,14 +57,13 @@ impl SimulationApp {
                 infection_lifetime_ms,
                 fatality_rate,
                 &window_box,
+                &grid_system,
             );
             if num_infected < max_infected {
                 organism.set_infected();
+                infection_group.push(organism.get_infection_radius());
             }
 
-            if organism.is_infected() {
-                infection_group.push(organism.get_infection_radius())
-            }
             organisms.push(organism);
             num_infected = num_infected + 1;
         }
@@ -73,8 +72,8 @@ impl SimulationApp {
             window_box,
             window,
             organisms,
+            grid_system,
             radius: circle_radius,
-            collision_radius: circle_collision_radius,
             infection_group,
             frame: 0,
         }
@@ -90,11 +89,7 @@ impl SimulationApp {
             // iterate through the circle group and check for newly infected
             let mut infection_group = Vec::new();
             for organism in self.organisms.iter_mut() {
-                organism.check_infected(
-                    self.collision_radius,
-                    &self.infection_group,
-                    &mut infection_group,
-                );
+                organism.check_infected(&self.infection_group, &mut infection_group, &mut self.grid_system);
             }
             self.infection_group = infection_group;
         }

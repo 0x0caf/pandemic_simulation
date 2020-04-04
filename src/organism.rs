@@ -4,6 +4,8 @@ use rgx::core::*;
 use rgx::kit::shape2d::{Batch, Fill, Shape};
 use rgx::math::*;
 use std::f32::consts::PI;
+use crate::grid_system::GridSystem;
+use crate::area::{Area, AreaPtr};
 
 #[derive(PartialEq)]
 enum InfectionState {
@@ -47,6 +49,7 @@ impl Square {
 
 pub struct OrganismState {
     pub position: Vector2<f32>,
+    area: AreaPtr,
     square: Square,
     size: f32,
     velocity: f32,
@@ -74,6 +77,7 @@ impl OrganismState {
         infection_lifetime_ms: i64,
         fatality_rate: f32,
         window_box: &WindowBox,
+        grid_system: &GridSystem,
     ) -> Self {
         let mut rng = rand::thread_rng();
         let x = width * rng.gen::<f32>();
@@ -87,9 +91,10 @@ impl OrganismState {
         let ang_x = angle.cos();
         let ang_y = angle.sin();
         let position = Vector2::new(x, y);
-
+        let grid_id = grid_system.get_grid_index(&position);
         Self {
             position,
+            area: Area::new(&position, grid_id, size),
             square: Square::from_center(&position, size),
             size,
             velocity,
@@ -122,6 +127,7 @@ impl OrganismState {
         let shift = self.velocity * (delta_ms as f32) / 1000.0;
         let result = window_box.collided_velocity(&self.position, shift, &self.direction);
         self.position = result.position;
+        (&*self.area).borrow_mut().square.update(&self.position);
         self.square = Square::from_center(&self.position, self.size);
         self.direction = result.direction;
         self.grid_id = window_box.grid_id(&result.position);
@@ -142,23 +148,33 @@ impl OrganismState {
 
     pub fn check_infected(
         &mut self,
-        collision_radius: f32,
         previous_infected_group: &Vec<InfectionRadius>,
         infected_group: &mut Vec<InfectionRadius>,
+        grid_system: &mut GridSystem,
     ) {
+
+        let old_grid_id = (&*self.area).borrow().grid_id;
+        let new_grid_id = grid_system.get_grid_index(&self.position);
+
         if self.infection_state == InfectionState::Uninfected {
-            'inner: for radius in previous_infected_group.iter() {
-                if self.grid_id == radius.grid_id {
-                    if self.square.intersects(&radius.square) {
-                        self.infection_state = InfectionState::Infected;
-                        break 'inner;
-                    }
+            let grid_ids = grid_system.get_grid_id_list(&(&*self.area).borrow().square.add_half_size_bias());
+            'outer: for grid_id in grid_ids.iter() {
+                if grid_system.find_intersection_in_grid(*grid_id, &(&*self.area).borrow().square) {
+                    self.infection_state = InfectionState::Infected;
+                    break 'outer;
                 }
+
             }
         }
 
         if self.infection_state == InfectionState::Infected {
             infected_group.push(self.get_infection_radius());
+            if old_grid_id != new_grid_id {
+                grid_system.remove_area_from_grid((&*self.area).borrow().area_id, old_grid_id);
+                grid_system.add_area(&self.area, new_grid_id);
+                let mut area = (&*self.area).borrow_mut();
+                area.grid_id = new_grid_id;
+            }
         }
     }
 
@@ -166,7 +182,7 @@ impl OrganismState {
         let color = match self.infection_state {
             InfectionState::Uninfected => Rgba::new(0.0, 0.5, 0.0, 1.0),
             InfectionState::Infected => Rgba::new(1.0, 0.0, 0.0, 1.0),
-            InfectionState::Recovered => Rgba::new(0.5, 0.5, 0.5, 1.0),
+            InfectionState::Recovered => Rgba::new(0.25, 0.25, 0.25, 1.0),
             InfectionState::Dead => {
                 if frame >> 3 & 0x1 == 1 {
                     Rgba::new(1.0, 0., 1.0, 1.0)

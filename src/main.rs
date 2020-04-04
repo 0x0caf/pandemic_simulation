@@ -2,17 +2,18 @@ use chrono::Local;
 use rgx::color::Rgba;
 use rgx::core::*;
 use rgx::kit;
-use rgx::kit::shape2d::{Batch, Fill, Shape};
-use rgx::math::*;
 
 use winit::{
-    event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent},
+    event::Event,
     event_loop::{ControlFlow, EventLoop},
     window::Window,
 };
 
+mod area;
+mod grid_system;
 mod organism;
 mod simulation_app;
+mod square;
 mod window_box;
 use simulation_app::{SimulationApp, WindowAttributes};
 

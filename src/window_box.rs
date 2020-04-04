@@ -1,5 +1,4 @@
 use rgx::math::*;
-use std::ops::Sub;
 // implements the collision box as implemented through rgx
 
 pub struct WindowBox {
