@@ -18,12 +18,11 @@ enum InfectionState {
 pub struct OrganismState {
     pub position: Vector2<f32>,
     area: AreaPtr,
-    velocity: f32,
+    pub velocity: f32,
     direction: Vector2<f32>,
     infection_time: i64,
     infection_lifetime_ms: i64,
     fatality_rate: f32,
-    pub grid_id: i32,
     infection_state: InfectionState,
 }
 
@@ -36,7 +35,6 @@ impl OrganismState {
         percentage_in_place: f32,
         infection_lifetime_ms: i64,
         fatality_rate: f32,
-        window_box: &WindowBox,
         grid_system: &GridSystem,
     ) -> Self {
         let mut rng = rand::thread_rng();
@@ -60,22 +58,27 @@ impl OrganismState {
             infection_lifetime_ms,
             fatality_rate,
             direction: Vector2::new(ang_x, ang_y),
-            grid_id: window_box.grid_id(&position),
             infection_state: InfectionState::Uninfected,
         }
     }
 
-    pub fn set_infected(&mut self) {
-        self.infection_state = InfectionState::Infected;
+    pub fn set_infected(&mut self, grid_system: &mut GridSystem) {
+        if self.infection_state == InfectionState::Uninfected {
+            let grid_id = grid_system.get_grid_index(&self.position);
+            grid_system.add_area(&self.area, grid_id);
+            let mut area = (&*self.area).borrow_mut();
+            area.grid_id = grid_id;
+            self.infection_state = InfectionState::Infected;
+        }
     }
 
     pub fn update(&mut self, delta_ms: i64, window_box: &WindowBox) {
         let shift = self.velocity * (delta_ms as f32) / 1000.0;
         let result = window_box.collided_velocity(&self.position, shift, &self.direction);
         self.position = result.position;
-        (&*self.area).borrow_mut().square.update(&self.position);
         self.direction = result.direction;
-        self.grid_id = window_box.grid_id(&result.position);
+        (&*self.area).borrow_mut().square.update(&self.position);
+
         if self.infection_state == InfectionState::Infected {
             self.infection_time += delta_ms;
             if self.infection_time >= self.infection_lifetime_ms {

@@ -20,18 +20,18 @@ impl SimulationApp {
     pub fn new(window: WindowAttributes) -> SimulationApp {
         let num_organisms = 20000;
         let mut num_infected = 0;
-        let max_infected = 50;
-        let percent_in_place = 0.;
+        let max_infected = 10;
+        let percent_in_place = 90.;
         let circle_radius = 1.0;
         let infection_lifetime_ms = 1000;
-        let fatality_rate = 10.0;
+        let fatality_rate = 2.0;
         // proportions
         let grid_pixel_size = 20;
         let max_velocity = 100.;
 
-        let window_box = WindowBox::new(window.width, window.height, grid_pixel_size);
+        let window_box = WindowBox::new(window.width, window.height);
         let mut organisms = Vec::new();
-        let grid_system = GridSystem::new(window.width, window.height, grid_pixel_size);
+        let mut grid_system = GridSystem::new(window.width, window.height, grid_pixel_size);
 
         for _i in 1..num_organisms {
             let mut organism = OrganismState::random(
@@ -42,12 +42,10 @@ impl SimulationApp {
                 percent_in_place,
                 infection_lifetime_ms,
                 fatality_rate,
-                &window_box,
                 &grid_system,
             );
-            if num_infected < max_infected {
-                organism.set_infected();
-                // TODO: Add to grid system
+            if num_infected < max_infected && organism.velocity > 0. {
+                organism.set_infected(&mut grid_system);
             }
 
             organisms.push(organism);
