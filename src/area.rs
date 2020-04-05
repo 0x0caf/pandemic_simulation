@@ -1,6 +1,6 @@
-use rgx::math::*;
-use rand::prelude::*;
 use crate::square::Square;
+use rand::prelude::*;
+use rgx::math::*;
 use std::cell::RefCell;
 use std::cmp::Ordering;
 use std::rc::Rc;
@@ -25,7 +25,6 @@ impl Area {
         };
         Rc::new(RefCell::new(area))
     }
-
 }
 
 impl Ord for Area {

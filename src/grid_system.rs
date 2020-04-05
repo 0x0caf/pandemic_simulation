@@ -1,4 +1,4 @@
-use crate::area::{AreaPtr, GridId, AreaId};
+use crate::area::{AreaId, AreaPtr, GridId};
 use crate::square::Square;
 use rgx::math::*;
 use std::rc::Rc;
@@ -45,7 +45,6 @@ impl GridSystem {
         }
     }
 
-
     pub fn get_grid_index(&self, position: &Vector2<f32>) -> usize {
         let x = (position.x as i32) / (self.grid_size as i32);
         let y = (position.y as i32) / (self.grid_size as i32);
@@ -55,7 +54,7 @@ impl GridSystem {
     pub fn get_grid_id_list(&self, square: &Square) -> Vec<GridId> {
         let mut ids = vec![
             self.get_grid_index(&square.bottom_left),
-            self.get_grid_index( &Vector2::new(square.top_right.x, square.bottom_left.y)),
+            self.get_grid_index(&Vector2::new(square.top_right.x, square.bottom_left.y)),
             self.get_grid_index(&square.center),
             self.get_grid_index(&Vector2::new(square.bottom_left.x, square.top_right.y)),
             self.get_grid_index(&square.top_right),

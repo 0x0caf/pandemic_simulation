@@ -1,11 +1,11 @@
+use crate::area::{Area, AreaPtr};
+use crate::grid_system::GridSystem;
 use crate::window_box::WindowBox;
 use rand::prelude::*;
 use rgx::core::*;
 use rgx::kit::shape2d::{Batch, Fill, Shape};
 use rgx::math::*;
 use std::f32::consts::PI;
-use crate::grid_system::GridSystem;
-use crate::area::{Area, AreaPtr};
 
 #[derive(PartialEq)]
 enum InfectionState {
@@ -94,22 +94,18 @@ impl OrganismState {
         }
     }
 
-    pub fn check_infected(
-        &mut self,
-        grid_system: &mut GridSystem,
-    ) {
-
+    pub fn check_infected(&mut self, grid_system: &mut GridSystem) {
         let old_grid_id = (&*self.area).borrow().grid_id;
         let new_grid_id = grid_system.get_grid_index(&self.position);
 
         if self.infection_state == InfectionState::Uninfected {
-            let grid_ids = grid_system.get_grid_id_list(&(&*self.area).borrow().square.add_half_size_bias());
+            let grid_ids =
+                grid_system.get_grid_id_list(&(&*self.area).borrow().square.add_half_size_bias());
             'outer: for grid_id in grid_ids.iter() {
                 if grid_system.find_intersection_in_grid(*grid_id, &(&*self.area).borrow().square) {
                     self.infection_state = InfectionState::Infected;
                     break 'outer;
                 }
-
             }
         }
 

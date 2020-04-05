@@ -1,7 +1,7 @@
+use crate::grid_system::GridSystem;
 use crate::organism::OrganismState;
 use crate::window_box::WindowBox;
 use rgx::kit::shape2d::Batch;
-use crate::grid_system::GridSystem;
 
 pub struct WindowAttributes {
     pub width: i32,
