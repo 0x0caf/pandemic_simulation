@@ -18,15 +18,15 @@ pub struct SimulationApp {
 
 impl SimulationApp {
     pub fn new(window: WindowAttributes) -> SimulationApp {
-        let num_organisms = 20000;
+        let num_organisms = 6000;
         let mut num_infected = 0;
-        let max_infected = 10;
-        let percent_in_place = 90.;
-        let circle_radius = 1.0;
+        let max_infected = 200;
+        let percent_in_place = 50.;
+        let circle_radius = 3.0;
         let infection_lifetime_ms = 1000;
         let fatality_rate = 2.0;
         // proportions
-        let grid_pixel_size = 20;
+        let grid_pixel_size = 25;
         let max_velocity = 100.;
 
         let window_box = WindowBox::new(window.width, window.height);
@@ -67,7 +67,7 @@ impl SimulationApp {
         }
         // positions updated, now check for intersections
         for organism in self.organisms.iter_mut() {
-            organism.check_infected(&mut self.grid_system);
+            organism.check_infected(delta_time, &mut self.grid_system);
         }
         self.frame = self.frame + 1;
     }

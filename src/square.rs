@@ -40,7 +40,7 @@ impl Square {
             || (other.top_right.x >= self.bottom_left.x && other.top_right.x <= self.top_right.x);
 
         x_intersect
-            || ((other.bottom_left.y >= self.bottom_left.y
+            && ((other.bottom_left.y >= self.bottom_left.y
                 && other.bottom_left.y <= self.top_right.y)
                 || (other.top_right.y >= self.bottom_left.y
                     && other.top_right.y <= self.top_right.y))

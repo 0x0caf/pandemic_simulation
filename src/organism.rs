@@ -20,6 +20,8 @@ pub struct OrganismState {
     area: AreaPtr,
     pub velocity: f32,
     direction: Vector2<f32>,
+    direction_change_ms: i64,
+    max_direction_ms: i64,
     infection_time: i64,
     infection_lifetime_ms: i64,
     fatality_rate: f32,
@@ -40,24 +42,31 @@ impl OrganismState {
         let mut rng = rand::thread_rng();
         let x = width * rng.gen::<f32>();
         let y = height * rng.gen::<f32>();
+        let max_direction_ms = (7000. * rng.gen::<f32>()) as i64;
+
         let velocity = if rng.gen::<f32>() * 100. < percentage_in_place {
             0.
         } else {
             max_velocity * rng.gen::<f32>()
         };
+
         let angle = 2. * PI * rng.gen::<f32>();
         let ang_x = angle.cos();
         let ang_y = angle.sin();
+        let direction = Vector2::new(ang_x, ang_y);
+
         let position = Vector2::new(x, y);
         let grid_id = grid_system.get_grid_index(&position);
         Self {
             position,
             area: Area::new(&position, grid_id, size),
             velocity,
+            direction_change_ms: 0,
+            max_direction_ms,
             infection_time: 0,
             infection_lifetime_ms,
             fatality_rate,
-            direction: Vector2::new(ang_x, ang_y),
+            direction,
             infection_state: InfectionState::Uninfected,
         }
     }
@@ -79,22 +88,19 @@ impl OrganismState {
         self.direction = result.direction;
         (&*self.area).borrow_mut().square.update(&self.position);
 
-        if self.infection_state == InfectionState::Infected {
-            self.infection_time += delta_ms;
-            if self.infection_time >= self.infection_lifetime_ms {
-                let mut rng = rand::thread_rng();
-                if rng.gen::<f32>() * 100. < self.fatality_rate {
-                    self.infection_state = InfectionState::Dead;
-                    self.velocity = 0.0;
-                } else {
-                    self.infection_state = InfectionState::Recovered;
-                }
-                self.infection_time = 0;
-            }
+        if self.direction_change_ms > self.max_direction_ms {
+            let mut rng = rand::thread_rng();
+            self.direction_change_ms = 0;
+            let angle = 2. * PI * rng.gen::<f32>();
+            let ang_x = angle.cos();
+            let ang_y = angle.sin();
+            self.direction = Vector2::new(ang_x, ang_y);
         }
+
+        self.direction_change_ms += delta_ms;
     }
 
-    pub fn check_infected(&mut self, grid_system: &mut GridSystem) {
+    pub fn check_infected(&mut self, delta_time: i64, grid_system: &mut GridSystem) {
         let old_grid_id = (&*self.area).borrow().grid_id;
         let new_grid_id = grid_system.get_grid_index(&self.position);
 
@@ -106,6 +112,19 @@ impl OrganismState {
                     self.infection_state = InfectionState::Infected;
                     break 'outer;
                 }
+            }
+        } else if self.infection_state == InfectionState::Infected {
+            self.infection_time += delta_time;
+            if self.infection_time >= self.infection_lifetime_ms {
+                let mut rng = rand::thread_rng();
+                grid_system.remove_area_from_grid((&*self.area).borrow().area_id, old_grid_id);
+                if rng.gen::<f32>() * 100. < self.fatality_rate {
+                    self.infection_state = InfectionState::Dead;
+                    self.velocity = 0.0;
+                } else {
+                    self.infection_state = InfectionState::Recovered;
+                }
+                self.infection_time = 0;
             }
         }
 
