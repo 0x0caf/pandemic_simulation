@@ -4,7 +4,7 @@ use rgx::core::*;
 use rgx::kit;
 
 use winit::{
-    event::Event,
+    event::{ElementState, Event, KeyboardInput, VirtualKeyCode, WindowEvent},
     event_loop::{ControlFlow, EventLoop},
     window::Window,
 };
@@ -34,9 +34,27 @@ fn main() -> Result<(), std::io::Error> {
     });
 
     let mut last_time = Local::now().timestamp_millis();
+    let mut continue_simulation = false;
 
     event_loop.run(move |event, _, control_flow| match event {
         Event::WindowEvent { event, .. } => match event {
+            WindowEvent::KeyboardInput {
+                input:
+                    KeyboardInput {
+                        virtual_keycode: Some(key),
+                        state: ElementState::Pressed,
+                        ..
+                    },
+                ..
+            } => match key {
+                VirtualKeyCode::Space => {
+                    continue_simulation = true;
+                }
+                VirtualKeyCode::P => {
+                    continue_simulation = false;
+                }
+                _ => {}
+            },
             _ => *control_flow = ControlFlow::Poll,
         },
         Event::MainEventsCleared => {
@@ -46,8 +64,9 @@ fn main() -> Result<(), std::io::Error> {
             let current_time = Local::now().timestamp_millis();
             let delta_time = current_time - last_time;
             last_time = current_time;
-
-            simulation.update(delta_time);
+            if continue_simulation {
+                simulation.update(delta_time);
+            }
 
             let app_batch = simulation.render();
             let buffer = app_batch.finish(&r);

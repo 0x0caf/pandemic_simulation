@@ -19,32 +19,31 @@ pub struct SimulationApp {
 impl SimulationApp {
     pub fn new(window: WindowAttributes) -> SimulationApp {
         let num_organisms = 6000;
-        let mut num_infected = 0;
-        let max_infected = 200;
-        let percent_in_place = 50.;
-        let circle_radius = 3.0;
+        let num_initially_infected = 200;
+        let percent_in_place = 90.;
+        let organism_size = 3.0;
         let infection_lifetime_ms = 1000;
         let fatality_rate = 2.0;
-        // proportions
         let grid_pixel_size = 25;
         let max_velocity = 100.;
 
         let window_box = WindowBox::new(window.width, window.height);
         let mut organisms = Vec::new();
         let mut grid_system = GridSystem::new(window.width, window.height, grid_pixel_size);
+        let mut num_infected = 0;
 
         for _i in 1..num_organisms {
             let mut organism = OrganismState::random(
                 window.width as f32,
                 window.height as f32,
-                circle_radius,
+                organism_size,
                 max_velocity,
                 percent_in_place,
                 infection_lifetime_ms,
                 fatality_rate,
                 &grid_system,
             );
-            if num_infected < max_infected && organism.velocity > 0. {
+            if num_infected < num_initially_infected && organism.velocity > 0. {
                 organism.set_infected(&mut grid_system);
             }
 

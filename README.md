@@ -14,8 +14,7 @@ I tried to keep all hard-coded values in their own place in the code(there may h
 
 ```rust
 let num_organisms = 6000;
-...
-let max_infected = 200;
+let num_initially_infected = 200;
 let percent_in_place = 50.;
 let circle_radius = 3.0;
 let infection_lifetime_ms = 1000;
@@ -25,13 +24,13 @@ let grid_pixel_size = 25;
 let max_velocity = 100.;
 ```
 
-`num_organisms` - is the number of organisms this simulation will create. I can get this app to run up to 20,000 organisms at once without any noticeable effects on FPS. I was seeing some significant slow-downs on FPS with large numbers of newly infected organisms at one time, but that has mainly been resolved with the implementation of the [Grid System](https://github.com/0x0caf/pandemic_simulation/blob/master/src/grid_system.rs).
+`num_organisms` - The number of organisms this simulation will create. I can get this app to run up to 20,000 organisms at once without any noticeable effects on FPS. I was seeing some significant slow-downs on FPS with large numbers of newly infected organisms at one time, but that has mainly been resolved with the implementation of the [Grid System](https://github.com/0x0caf/pandemic_simulation/blob/master/src/grid_system.rs).
 
-`max_infected` - this isn't very aptly named, I admit. This is the number of infected organisms the app will start the simulation with.
+`num_initially_infected` - This is the number of infected organisms the app will start the simulation with.
 
 `percent_in_place` - the percentage of organisms to shelter in place.
 
-`circle_radius` - A poorly named variable to set the size of the organisms in pixels.
+`organism_size` - A variable to set the size of the organisms in pixels.
 
 `infection_lifetime_ms` - the number of milliseconds an organism is to stay infected and contagious with the virus. Afterwards the organism will either recover or die based on `fatality_rate`.
 
@@ -50,12 +49,29 @@ I've chosen some colors to indicate an organism's state. Feel free to change the
 
 **Dead** - Blinking Fuchsia
 
+## Minimal Usage
+There is currently only one way to control this app: Pause and unpause:
+
+* Press Space to unpause. This app starts paused initially
+* Press P to pause
+
 ## Initial Observations
 
 As stated in the Washington Post article, shelter in place has a noticeable effect on infection rate even with a simple app like this one. The higher the shelter in place percentage the slower the infection and the higher number of uninfected when the virus finally dies out. With lower shelter in place percentages there are a higher number of infected organisms, a quicker infection rate, and a higher number of dead.
 
 Of course this app is far to simple to simulate more realistic characteristics of a pandemic, but it's very interesting to observe how simple characteristics such as shelter in place can have a positive effect.
 
+Ninety Percent Shelter In Place:
+
+![Ninety Percent Shelter In Place](images/Ninty-Percent_small.gif)
+
+Fifty Percent Shelter In Place:
+
+![Fifty Percent Shelter In Place](images/Fifty-Percent_small.gif)
+
+Zero Percent Shelter In Place: 
+
+![Zero Percent Shelter In Place](images/Zero-Percent_small.gif)
 
 ## Current Issues
 Due to the casualness of my approach to development of this app, I've left some things out of this app.
